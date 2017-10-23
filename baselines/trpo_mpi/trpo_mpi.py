@@ -9,6 +9,8 @@ from collections import deque
 from baselines.common.mpi_adam import MpiAdam
 from baselines.common.cg import cg
 from contextlib import contextmanager
+from osim.env import *
+from osim.http.client import Client
 
 def traj_segment_generator(pi, env, horizon, stochastic):
     # Initialize state variables
@@ -286,6 +288,21 @@ def learn(env, policy_func, *,
 
         if rank==0:
             logger.dump_tabular()
+    # submit
+    # token = '5bacf9e65c8bb6e77dbe32bb3457bfe7'
+    # remote_base = 'http://grader.crowdai.org:1729'
+    # client = Client(remote_base)
+    # observation = client.env_create(token)
+    # while True:
+    #     ac, vpred = pi.act(False, observation)
+    #     [observation, reward, done, info] = client.env_step(ac.tolist())
+    #     # print(observation)
+    #     if done:
+    #         print('resetting test')
+    #         observation = client.env_reset()
+    #         if not observation:
+    #             break
+    # client.submit()
 
 def flatten_lists(listoflists):
     return [el for list_ in listoflists for el in list_]

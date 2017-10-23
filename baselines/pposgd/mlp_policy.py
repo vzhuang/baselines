@@ -2,6 +2,7 @@ from baselines.common.mpi_running_mean_std import RunningMeanStd
 import baselines.common.tf_util as U
 import tensorflow as tf
 import gym
+import numpy as np
 from baselines.common.distributions import make_pdtype
 
 class MlpPolicy(object):
@@ -47,8 +48,20 @@ class MlpPolicy(object):
         ac = U.switch(stochastic, self.pd.sample(), self.pd.mode())
         self._act = U.function([stochastic, ob], [ac, self.vpred])
 
+    def pretrain_fourier():
+        train_obs = np.array(pickle.load(open('train_obs', 'rb')))
+        train_actions = np.array(pickle.load(open('train_actions', 'rb')))
+
+        for i in range(len(train_actions)):
+            for j in range(len(train_actions[i])):
+                if train_actions[i][j] < 0:
+                    train_actions[i][j] = 0.0
+                if train_actions[i][j] > 1:
+                    train_actions[i][j] = 1.0
+        
+
     def act(self, stochastic, ob):
-        ac1, vpred1 =  self._act(stochastic, ob[None])
+        ac1, vpred1 =  self._act(stochastic, np.array(ob)[None])
         return ac1[0], vpred1[0]
     def get_variables(self):
         return tf.get_collection(tf.GraphKeys.VARIABLES, self.scope)

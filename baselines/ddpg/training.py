@@ -19,7 +19,7 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
     tau=0.01, eval_env=None, param_noise_adaption_interval=50):
     rank = MPI.COMM_WORLD.Get_rank()
 
-    assert (np.abs(env.action_space.low) == env.action_space.high).all()  # we assume symmetric actions.
+    # assert (np.abs(env.action_space.low) == env.action_space.high).all()  # we assume symmetric actions.
     max_action = env.action_space.high
     logger.info('scaling actions by {} before executing in env'.format(max_action))
     agent = DDPG(actor, critic, memory, env.observation_space.shape, env.action_space.shape,
@@ -46,7 +46,7 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
         sess.graph.finalize()
 
         agent.reset()
-        obs = env.reset()
+        obs = env.reset(difficulty=0)
         if eval_env is not None:
             eval_obs = eval_env.reset()
         done = False
@@ -102,7 +102,7 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
                         episodes += 1
 
                         agent.reset()
-                        obs = env.reset()
+                        obs = env.reset(difficulty=0)
 
                 # Train.
                 epoch_actor_losses = []
