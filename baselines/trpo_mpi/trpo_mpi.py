@@ -81,7 +81,7 @@ def add_vtarg_and_adv(seg, gamma, lam):
         gaelam[t] = lastgaelam = delta + gamma * lam * nonterminal * lastgaelam
     seg["tdlamret"] = seg["adv"] + seg["vpred"]
 
-def learn(env, policy_func, *,
+def learn(sess, restore, env, policy_func, *,
         timesteps_per_batch, # what to train on
         max_kl, cg_iters,
         gamma, lam, # advantage estimation
@@ -167,7 +167,11 @@ def learn(env, policy_func, *,
         out /= nworkers
         return out
 
-    U.initialize()
+    if restore:
+        saver = tf.train.Saver()
+        saver.restore(sess, 'saved/trpo_checkpoint')
+    else:
+        U.initialize()
     th_init = get_flat()
     MPI.COMM_WORLD.Bcast(th_init, root=0)
     set_from_flat(th_init)
@@ -285,6 +289,9 @@ def learn(env, policy_func, *,
         logger.record_tabular("EpisodesSoFar", episodes_so_far)
         logger.record_tabular("TimestepsSoFar", timesteps_so_far)
         logger.record_tabular("TimeElapsed", time.time() - tstart)
+
+        saver = tf.train.Saver()
+        saver.save(sess, 'saved/trpo_checkpoint')
 
         if rank==0:
             logger.dump_tabular()

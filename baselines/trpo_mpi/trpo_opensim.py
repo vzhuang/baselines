@@ -31,8 +31,8 @@ parser.add_argument('--train', dest='train', action='store_true', default=True)
 parser.add_argument('--test', dest='train', action='store_false', default=True)
 parser.add_argument('--steps', dest='steps', default=10000, type=int)
 parser.add_argument('--visualize', dest='visualize', action='store_true', default=False)
-parser.add_argument('--model', dest='model', default="example.h5f")
 parser.add_argument('--token', dest='token', required=False)
+parser.add_argument('--restore', dest='restore', action='store_true', default=False)
 args = parser.parse_args()
 
 # Load walking environment
@@ -53,6 +53,9 @@ env.seed(seed)
 import baselines.common.tf_util as U
 sess = U.single_threaded_session()
 sess.__enter__()
+# if args.restore:
+#     saver = tf.train.Saver()
+#     saver.restore(sess, 'saved/trpo_checkpoint')
 
 rank = MPI.COMM_WORLD.Get_rank()
 if rank != 0:
@@ -66,8 +69,10 @@ def policy_fn(name, ob_space, ac_space):
 env.seed(workerseed)
 gym.logger.setLevel(logging.WARN)
 
-trpo_mpi.learn(env, policy_fn, timesteps_per_batch=4096, max_kl=0.5, cg_iters=10, cg_damping=0.1,
-    max_timesteps=num_timesteps, gamma=0.99, lam=0.97, vf_iters=5, vf_stepsize=5e-3)
+trpo_mpi.learn(sess, args.restore, env, policy_fn, timesteps_per_batch=2048, max_kl=0.5, cg_iters=20, cg_damping=0.1,
+    max_timesteps=num_timesteps, gamma=0.995, lam=0.97, vf_iters=5, vf_stepsize=5e-3)
+# saver = tf.train.Saver()
+# saver.save(sess, 'trpo_checkpoint')
 
 print(time.time()-st)
 
